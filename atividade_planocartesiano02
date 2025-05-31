@@ -1,0 +1,198 @@
+import random
+import matplotlib.pyplot as plt
+import ipywidgets as widgets
+from IPython.display import display, clear_output
+
+# Função para sortear um intervalo com tipos aleatórios
+def gerar_intervalo_BC():
+    min_val = random.randint(-10, 9)
+    max_val = random.randint(min_val + 1, 10)
+
+    tipo = random.choice(['[a,b]', '(a,b)', '[a,b)', '(a,b]'])
+    return min_val, max_val, tipo
+
+# Função para sortear conjunto A
+def gerar_conjunto_A(n, min_A=-10, max_A=10):
+    return sorted(random.sample(range(min_A, max_A + 1), n))
+
+# Função para desenhar o plano cartesiano com A × BC ou BC × A
+def desenhar_grafico(A, bc_min, bc_max, tipo_intervalo, direcao='A × BC'):
+    plt.figure(figsize=(8, 6))
+    plt.axhline(0, color='black', linewidth=0.5)
+    plt.axvline(0, color='black', linewidth=0.5)
+    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.title(f"Gráfico do Produto Cartesiano")
+
+    if direcao == 'A × BC':
+        x_vals = A
+        y_min, y_max = bc_min - 2, bc_max + 2
+        x_min, x_max = min(x_vals) - 2, max(x_vals) + 2
+        plt.xlabel("Eixo X (conjunto A)")
+        plt.ylabel("Eixo Y (intervalo BC)")
+    else:
+        y_vals = A
+        x_min, x_max = bc_min - 2, bc_max + 2
+        y_min, y_max = min(y_vals) - 2, max(y_vals) + 2
+        plt.xlabel("Eixo X (intervalo BC)")
+        plt.ylabel("Eixo Y (conjunto A)")
+
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+
+    # Ticks a cada 1
+    plt.xticks(range(int(x_min), int(x_max) + 1))
+    plt.yticks(range(int(y_min), int(y_max) + 1))
+
+    # Desenhar o produto cartesiano
+    for val in A:
+        if direcao == 'A × BC':
+            x = val
+            y_start, y_end = bc_min, bc_max
+            # Faixa vertical
+            plt.fill_between([x - 0.1, x + 0.1], y_start, y_end, color='skyblue', edgecolor='black')
+            # Desenha extremos
+            fechado_min = tipo_intervalo in ['[a,b]', '[a,b)']
+            fechado_max = tipo_intervalo in ['[a,b]', '(a,b]']
+
+            plt.scatter(x, y_start, color='white' if not fechado_min else 'black', edgecolor='black', s=50)
+            plt.scatter(x, y_end, color='white' if not fechado_max else 'black', edgecolor='black', s=50)
+
+        else:
+            y = val
+            x_start, x_end = bc_min, bc_max
+            # Faixa horizontal
+            plt.fill_betweenx([y - 0.1, y + 0.1], x_start, x_end, color='lightgreen', edgecolor='black')
+            # Desenha extremos
+            fechado_min = tipo_intervalo in ['[a,b]', '[a,b)']
+            fechado_max = tipo_intervalo in ['[a,b]', '(a,b]']
+
+            plt.scatter(x_start, y, color='white' if not fechado_min else 'black', edgecolor='black', s=50)
+            plt.scatter(x_end, y, color='white' if not fechado_max else 'black', edgecolor='black', s=50)
+
+    plt.show()
+
+# Interface principal
+n_input = widgets.Text(placeholder="Ex: 4", description="Quantos elementos em A?")
+iniciar_btn = widgets.Button(description="Iniciar Atividade")
+output = widgets.Output()
+
+display(n_input, iniciar_btn, output)
+
+# Variáveis globais
+A_jogo = []
+bc_min_jogo = None
+bc_max_jogo = None
+tipo_bc_jogo = None
+direcao_jogo = None
+
+def on_iniciar_clicked(b):
+    global A_jogo, bc_min_jogo, bc_max_jogo, tipo_bc_jogo, direcao_jogo
+
+    try:
+        n = int(n_input.value)
+        if not (1 <= n <= 10):
+            with output:
+                clear_output()
+                print("⚠️ Digite um número entre 1 e 10.")
+            return
+    except:
+        with output:
+            clear_output()
+            print("⚠️ Entrada inválida.")
+        return
+
+    # Geração automática de A e BC
+    A_jogo = gerar_conjunto_A(n)
+    bc_min_jogo, bc_max_jogo, tipo_bc_jogo = gerar_intervalo_BC()
+    direcao_jogo = random.choice(['A × BC', 'BC × A'])
+
+    with output:
+        clear_output()
+        desenhar_grafico(A_jogo, bc_min_jogo, bc_max_jogo, tipo_bc_jogo, direcao=direcao_jogo)
+
+        # Perguntas
+        print("🔍 Com base no gráfico acima, responda:")
+        input_A = widgets.Text(placeholder="Ex: {1, 3, 5}", layout=widgets.Layout(width='400px'))
+        input_min = widgets.Text(placeholder="Ex: 2", layout=widgets.Layout(width='100px'))
+        input_max = widgets.Text(placeholder="Ex: 6", layout=widgets.Layout(width='100px'))
+        checkbox_min = widgets.Checkbox(value=False, description="Pertence?", layout=widgets.Layout(width='120px'))
+        checkbox_max = widgets.Checkbox(value=False, description="Pertence?", layout=widgets.Layout(width='120px'))
+
+        direcao_selector = widgets.RadioButtons(options=['A × BC', 'BC × A'], value=None, description='Direção do produto:')
+
+        btn_enviar = widgets.Button(description="Enviar Respostas")
+        resultado = widgets.Label(value="")
+        display(
+            widgets.VBox([
+                widgets.HBox([widgets.Label("Elementos de A:", layout=widgets.Layout(width='120px')), input_A]),
+                widgets.HBox([
+                    widgets.Label("Extremo inferior de BC:", layout=widgets.Layout(width='160px')),
+                    input_min,
+                    checkbox_min
+                ]),
+                widgets.HBox([
+                    widgets.Label("Extremo superior de BC:", layout=widgets.Layout(width='160px')),
+                    input_max,
+                    checkbox_max
+                ]),
+                direcao_selector,
+                btn_enviar,
+                resultado
+            ])
+        )
+
+        def validar_lista(resposta, correto):
+            try:
+                resposta_limpa = resposta.replace("{", "").replace("}", "").strip()
+                resposta_lista = sorted(int(x.strip()) for x in resposta_limpa.split(","))
+                return resposta_lista == correto
+            except:
+                return False
+
+        def on_enviar_clicked(_):
+            pontos = 0
+            try:
+                # Valida conjunto A
+                ok_A = validar_lista(input_A.value, A_jogo)
+                if ok_A:
+                    pontos += 1
+
+                # Valida extremos
+                ok_min = int(input_min.value) == bc_min_jogo
+                ok_max = int(input_max.value) == bc_max_jogo
+
+                if ok_min:
+                    pontos += 1
+                if ok_max:
+                    pontos += 1
+
+                # Valida inclusão dos extremos
+                pertence_min = checkbox_min.value
+                pertence_max = checkbox_max.value
+
+                esperado_pertence_min = tipo_bc_jogo in ['[a,b]', '[a,b)']
+                esperado_pertence_max = tipo_bc_jogo in ['[a,b]', '(a,b]']
+
+                ok_min_check = (pertence_min == esperado_pertence_min)
+                ok_max_check = (pertence_max == esperado_pertence_max)
+
+                if ok_min_check:
+                    pontos += 1
+                if ok_max_check:
+                    pontos += 1
+
+                # Valida direção do produto cartesiano
+                ok_direcao = (direcao_selector.value == direcao_jogo)
+                if ok_direcao:
+                    pontos += 1
+
+                total = 6
+                resultado.value = f"📊 Pontuação: {pontos}/{total}\n"
+                resultado.value += f"✅ Respostas corretas: {ok_A}, {ok_min}, {ok_max}, {ok_min_check}, {ok_max_check}, {'Sim' if ok_direcao else 'Não'}"
+
+            except Exception as e:
+                resultado.value = f"⚠️ Erro na validação das respostas: {e}"
+
+        btn_enviar.on_click(on_enviar_clicked)
+
+iniciar_btn.on_click(on_iniciar_clicked)
