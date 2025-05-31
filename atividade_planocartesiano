@@ -1,0 +1,122 @@
+import random
+import matplotlib.pyplot as plt
+import ipywidgets as widgets
+from IPython.display import display, clear_output
+
+# Função para gerar pontos aleatórios sem repetição
+def gerar_pontos(n):
+    pontos = []
+    while len(pontos) < n:
+        ponto = (random.randint(-10, 10), random.randint(-10, 10))
+        if ponto not in pontos:
+            pontos.append(ponto)
+    return pontos
+
+# Função para desenhar o plano cartesiano com ticks a cada 1.0
+def desenhar_plano_cartesiano(pontos, letras):
+    x_coords, y_coords = zip(*pontos)
+    
+    plt.figure(figsize=(8, 8))
+    plt.xlim(-11, 11)
+    plt.ylim(-11, 11)
+    
+    # Definindo os ticks dos eixos com espaçamento de 1.0
+    plt.xticks(range(-10, 11, 1))
+    plt.yticks(range(-10, 11, 1))
+    
+    plt.axhline(0, color='black', linewidth=0.5)
+    plt.axvline(0, color='black', linewidth=0.5)
+    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.title("Plano Cartesiano com Pontos Aleatórios")
+    plt.xlabel("Eixo X")
+    plt.ylabel("Eixo Y")
+
+    for (x, y), letra in zip(pontos, letras):
+        plt.scatter(x, y, color='red')
+        plt.text(x + 0.2, y + 0.2, letra, fontsize=12, color='blue')
+
+    plt.show()
+
+# Interface principal
+n_input = widgets.Text(placeholder="Digite a quantidade de pontos", description="Pontos:")
+iniciar_btn = widgets.Button(description="Iniciar Jogo")
+output = widgets.Output()
+
+display(n_input, iniciar_btn, output)
+
+# Variáveis globais
+pontos_jogo = []
+letras_jogo = []
+respostas_widgets = []
+feedback_labels = []
+pontuacao_label = widgets.Label(value="Pontuação: 0")
+layout = widgets.VBox([])
+
+def on_iniciar_clicked(b):
+    global pontos_jogo, letras_jogo, respostas_widgets, feedback_labels, layout
+
+    try:
+        n = int(n_input.value)
+        if not (1 <= n <= 26):
+            with output:
+                clear_output()
+                print("⚠️ Digite um número entre 1 e 26.")
+            return
+    except:
+        with output:
+            clear_output()
+            print("⚠️ Entrada inválida.")
+        return
+
+    pontos_jogo = gerar_pontos(n)
+    letras_jogo = [chr(65 + i) for i in range(n)]
+
+    with output:
+        clear_output()
+        
+        # Desenha o gráfico
+        desenhar_plano_cartesiano(pontos_jogo, letras_jogo)
+        
+        # Prepara os widgets das perguntas
+        respostas_widgets.clear()
+        feedback_labels.clear()
+        
+        children = [widgets.Label("Digite as coordenadas dos pontos no formato (x, y):")]
+        
+        for letra in letras_jogo:
+            hbox = widgets.HBox([
+                widgets.Label(f"Ponto {letra}:", layout=widgets.Layout(width='80px')),
+                widgets.Text(placeholder="(x, y)", layout=widgets.Layout(width='120px')),
+                widgets.Label("", layout=widgets.Layout(width='200px'))  # Para feedback
+            ])
+            respostas_widgets.append(hbox.children[1])
+            feedback_labels.append(hbox.children[2])
+            children.append(hbox)
+        
+        btn_enviar = widgets.Button(description="Enviar Respostas")
+        children.append(btn_enviar)
+        children.append(pontuacao_label)
+        
+        layout = widgets.VBox(children)
+        display(layout)
+
+        def on_enviar_clicked(b):
+            pontuacao = 0
+            for i, ((x_correto, y_correto), entrada, label) in enumerate(zip(pontos_jogo, respostas_widgets, feedback_labels)):
+                try:
+                    resposta = entrada.value.strip('() ')
+                    x, y = map(int, resposta.split(','))
+                    if (x, y) == (x_correto, y_correto):
+                        label.value = "✅ Correto!"
+                        pontuacao += 1
+                    else:
+                        label.value = f"❌ Errado. Era ({x_correto}, {y_correto})"
+                        pontuacao -= 1
+                except:
+                    label.value = "⚠️ Formato inválido"
+                    pontuacao -= 1
+            pontuacao_label.value = f"📊 Pontuação Total: {pontuacao}"
+
+        btn_enviar.on_click(on_enviar_clicked)
+
+iniciar_btn.on_click(on_iniciar_clicked)
