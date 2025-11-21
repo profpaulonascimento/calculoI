@@ -1,3 +1,5 @@
+#@title Exercício
+
 import random
 import matplotlib.pyplot as plt
 import ipywidgets as widgets
@@ -72,7 +74,12 @@ def desenhar_grafico(A, bc_min, bc_max, tipo_intervalo, direcao='A × BC'):
     plt.show()
 
 # Interface principal
-n_input = widgets.Text(placeholder="Ex: 4", description="Quantos elementos em A?")
+#n_input = widgets.Text(placeholder="Ex: 4", description="Quantos elementos em A?")
+n_input = widgets.Text(
+    placeholder="Ex: 4",
+    description="Quantos elementos em A?",
+    style={'description_width': 'initial'}  # deixa a descrição com largura natural
+)
 iniciar_btn = widgets.Button(description="Iniciar Atividade")
 output = widgets.Output()
 
