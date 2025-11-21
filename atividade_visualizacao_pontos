@@ -1,0 +1,44 @@
+import matplotlib.pyplot as plt
+
+# Entrada do usuário
+entrada_A = input("Digite os elementos de A separados por vírgula: ")
+entrada_B = input("Digite os elementos de B separados por vírgula: ")
+
+# Converter para listas de inteiros
+A = [int(x.strip()) for x in entrada_A.split(",") if x.strip() != ""]
+B = [int(x.strip()) for x in entrada_B.split(",") if x.strip() != ""]
+
+# Produto cartesiano A × B
+prod_cart = [(a, b) for a in A for b in B]
+x_vals = [p[0] for p in prod_cart]
+y_vals = [p[1] for p in prod_cart]
+
+# Plotagem
+fig, ax = plt.subplots(figsize=(6,6))
+ax.plot(x_vals, y_vals, 'o', color='red', ms=1)
+
+# Configurações dos eixos
+ax.set_title("Produto Cartesiano A × B")
+ax.set_xlabel("Conjunto A")
+ax.set_ylabel("Conjunto B")
+
+# Ajustar limites para incluir a origem
+ax.set_xlim(min(A)-2, max(A)+2)
+ax.set_ylim(min(B)-2, max(B)+2)
+
+# Marcar ticks garantindo -1 no limite inferior
+ax.set_xticks(range(min(-1, min(A)-2), max(A)+3))
+ax.set_yticks(range(min(-1, min(B)-2), max(B)+3))
+
+# Reposicionar os eixos para cruzarem na origem
+ax.spines['left'].set_position('zero')   # eixo y passa no x=0
+ax.spines['bottom'].set_position('zero') # eixo x passa no y=0
+ax.spines['right'].set_color('none')     # remove borda direita
+ax.spines['top'].set_color('none')       # remove borda superior
+
+# Ativar ticks nos eixos reposicionados
+ax.xaxis.set_ticks_position('bottom')
+ax.yaxis.set_ticks_position('left')
+
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.show()
